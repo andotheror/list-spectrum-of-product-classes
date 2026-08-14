@@ -1,0 +1,427 @@
+\documentclass{article}
+
+\usepackage{iclr2027_conference,times}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{booktabs,microtype,url,xcolor}
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\E}{\mathbb E}
+\newcommand{\Pp}{\mathbb P}
+\newcommand{\cH}{\mathcal H}
+\newcommand{\cY}{\mathcal Y}
+\newcommand{\cX}{\mathcal X}
+\newcommand{\cA}{\mathcal A}
+\newcommand{\cD}{\mathcal D}
+\newcommand{\cF}{\mathcal F}
+\newcommand{\cG}{\mathcal G}
+\newcommand{\Risk}{\mathfrak R}
+\newcommand{\Bayes}{\mathfrak B}
+\newcommand{\Nat}{d_{\mathrm N}}
+\newcommand{\DS}{d_{\mathrm{DS}}}
+\newcommand{\Gdim}{d_{\mathrm G}}
+\newcommand{\1}{\mathbf 1}
+
+\title{The List Spectrum of Product Classes}
+\author{\textbf{Pahan Dewasurendra} \\ Johns Hopkins University}
+
+\hypersetup{pdftitle={The List Spectrum of Product Classes},pdfauthor={Pahan Dewasurendra},pdfkeywords={list, spectrum, product, classes, many, predictions, example, necessary, learn},pdfsubject={preprint}}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+How many predictions per example are necessary to learn several classification tasks simultaneously? For a class \(\cH\), let \(K(\cH)\) be the least list size that makes realizable PAC learning possible. Hanneke, Moran, and Waknine asked for \(K(\cH_1\otimes\cH_2)\), leaving a gap between \((K(\cH_1)-1)(K(\cH_2)-1)\) and \(K(\cH_1)K(\cH_2)\).
+
+We close the gap and determine a stronger risk spectrum. For nonempty classes with finite \(k_j=K(\cH_j)\), set \(M=\prod_j k_j\). If a learner may output \(L\) tuple labels, then its optimal worst-case expected realizable error converges to
+\[
+\left(1-\frac{L}{M}\right)_+.
+\]
+Consequently, \(K(\bigotimes_j\cH_j)=\prod_jK(\cH_j)\). The result is quantitative at every sample size. Its lower bound is a strong direct-product inequality in terms of the factor learning curves.
+
+The proof turns infinite list-DS pseudo-cubes into explicit finite Bayes experiments. On an unseen coordinate, the posterior contains \(k_j\) competing labels. A difference of adjacent Bayes list risks lower bounds the \(k_j\)-th posterior mass. Under independent products, these masses multiply, while a list of size \(L\) omits at least \(M-L\) cells of the top-posterior grid. This posterior order-statistic argument also shows that optimal weak multiclass accuracies multiply. We complement the list theorem with an exact fixed-marginal tensorization under standard minimax regularity and dimension-dependent rates for uniform and agnostic product learning.
+\end{abstract}
+
+\section{Introduction}
+
+Direct-sum questions ask how the resources needed for one task scale when several independent instances must be solved together. In classification, the Cartesian product \(\cH_1\otimes\cH_2\) predicts a pair of labels and incurs zero-one loss when either coordinate is wrong. Separate learning gives immediate upper bounds, but it need not reveal the optimal dependence on the number or structure of the tasks.
+
+\citet{hanneke2024direct} formulated a collection of direct-sum problems for PAC learning, uniform convergence, agnostic learning, compression, and combinatorial dimensions. Their sharpest qualitative question concerns list learning. A \(k\)-list learner gets \(k\) guesses at the label. If \(K(\cH)\) is the least \(k\) for which \(\cH\) is \(k\)-list PAC learnable, they proved
+\[
+(K(\cH_1)-1)(K(\cH_2)-1)
+\le K(\cH_1\otimes\cH_2)
+\le K(\cH_1)K(\cH_2).
+\]
+The upper bound outputs all pairs from two marginal lists. The lower bound combines list-DS pseudo-cubes, but its gap is largest when one factor is ordinarily learnable and remains nontrivial for every fixed list size.
+
+We prove that the Cartesian upper bound is exact. More strongly, we determine the asymptotic minimax error for every list budget. Let \(\Risk_k(n;\cH)\) be the smallest worst-case expected realizable error of a randomized \(k\)-list learner trained on \(n\) examples. For \(k_j=K(\cH_j)<\infty\) and \(M=\prod_jk_j\), our main theorem gives
+\begin{equation}
+\label{eq:spectrum-intro}
+\lim_{n\to\infty}\Risk_L\!\left(n;\bigotimes_j\cH_j\right)
+=\left(1-\frac{L}{M}\right)_+.
+\end{equation}
+Thus every missing slot below the threshold has an exact asymptotic price. In particular, an \((M-1)\)-list learner retains error \(1/M\), while an \(M\)-list learner achieves vanishing error.
+
+The lower bound does not follow by tensorizing the previous nonlearnability statement. That route loses one label in every factor. Our proof instead extracts a posterior order statistic from the sharp boundary between learnable and nonlearnable list sizes. If \(k=K(\cH)\ge2\), the \((k-1)\)-DS dimension is infinite by the characterization of \citet{charikar2023characterization}. An arbitrarily high-dimensional pseudo-cube supports a finite prior for which a \((k-1)\)-list has Bayes error arbitrarily close to \(1/k\). Under the same prior, a \(k\)-list has Bayes error at most \(\Risk_k(n;\cH)\). The difference of these two risks is the expected \(k\)-th largest posterior label probability.
+
+For a product experiment, the coordinate posteriors are independent. Their top \(k_j\) labels form a grid of \(M\) tuple labels. Every cell has posterior mass at least the product of the boundary order statistics. Any \(L\)-list omits at least \(M-L\) cells. This gives the finite-sample inequality
+\begin{equation}
+\label{eq:lower-intro}
+\Risk_L\!\left(n;\bigotimes_j\cH_j\right)
+\ge (M-L)\prod_j\left(\frac1{k_j}-\Risk_{k_j}(n;\cH_j)\right)_+.
+\end{equation}
+Taking \(n\to\infty\) proves the lower half of \eqref{eq:spectrum-intro}. For the upper half, form the Cartesian list and retain a uniformly random \(L\)-sublist.
+
+The theorem has an immediate boosting interpretation. \citet{brukhim2023boosting} prove that the best weak PAC accuracy \(\gamma(\cH)\) satisfies \(K(\cH)\gamma(\cH)=1\). Exact list multiplicativity therefore implies exact weak-accuracy multiplicativity. Solving more tasks simultaneously multiplies the smallest nontrivial accuracy rather than adding weak edges.
+
+We also revisit the learning-curve questions of \citet{hanneke2024direct}. For a known marginal, product Bayes risks tensorize exactly. This yields the minimax identity \(1-\prod_j(1-\Risk_j)\) whenever the standard minimax equality with finite priors holds, including every finite game. For unrestricted agnostic learning, no formula in the one-factor curve alone is possible. The recent separation of \citet{more2026separation} gives two binary classes with identical one-factor rates and different product rates. We give a complementary dimension-dependent result. In the nondegenerate regime, the latest sharp multiclass theorems imply an agnostic product rate with a linear realizable term and a square-root noisy term.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+\item We determine the complete asymptotic list-risk spectrum of a finite Cartesian product and prove the finite-sample strong direct-product inequality \eqref{eq:lower-intro}.
+\item We resolve the minimal-list-size question exactly, including heterogeneous factors and infinite list numbers, and deduce multiplicativity of optimal weak PAC accuracy.
+\item We prove a fixed-marginal Bayes and minimax tensorization theorem for all-coordinate zero-one loss.
+\item We derive product-class rates from graph, DS, and Natarajan dimensions, while identifying the low-dimensional exceptions exposed by the latest agnostic separation.
+\end{enumerate}
+
+\section{Setting}
+\label{sec:setting}
+
+Let \(\cH\subseteq\cY^{\cX}\) be a nonempty concept class. A randomized \(k\)-list learner maps a labeled sample \(S\in(\cX\times\cY)^n\) to a measurable function \(A(S):\cX\to2^{\cY}\) satisfying \(|A(S)(x)|\le k\). For a marginal \(D\) on \(\cX\), a target \(h\in\cH\), and an independent \(X\sim D\), its expected realizable error is
+\[
+\E_{S\sim D_h^n,A,X}\1\{h(X)\notin A(S)(X)\},
+\qquad D_h=\operatorname{Law}(X,h(X)).
+\]
+Define the minimax list risk
+\begin{equation}
+\label{eq:risk-def}
+\Risk_k(n;\cH)
+=\inf_A\sup_{D}\sup_{h\in\cH}
+\E_{S\sim D_h^n,A,X}\1\{h(X)\notin A(S)(X)\}.
+\end{equation}
+Set \(\Risk_0(n;\cH)=1\). Allowing lists of size at most rather than exactly \(k\) is immaterial because lists can be padded whenever needed.
+
+Vanishing minimax expected risk is equivalent to realizable list PAC learnability. A high-probability guarantee gives vanishing expectation after clipping the loss at one. Conversely, Markov's inequality turns vanishing expectation into any fixed error and confidence guarantee. We therefore define
+\[
+K(\cH)=\min\{k\ge1:\Risk_k(n;\cH)\to0\},
+\]
+with \(K(\cH)=\infty\) if no finite list works.
+
+The list-DS characterization gives the same threshold if learner randomization is forbidden. Randomization is used only to state the exact subcritical spectrum in its simplest form.
+
+For classes \(\cH_j\subseteq\cY_j^{\cX_j}\), their Cartesian product is
+\[
+\bigotimes_{j=1}^r\cH_j
+=\left\{(x_1,\ldots,x_r)\mapsto(h_1(x_1),\ldots,h_r(x_r)):h_j\in\cH_j\right\}.
+\]
+The label is a tuple and the loss is one unless the entire true tuple appears in the predicted list. This is all-coordinate zero-one loss, not averaged Hamming loss.
+
+We use the list-DS characterization. The ordinary DS dimension was introduced by \citet{daniely2014optimal} and shown to characterize multiclass PAC learnability by \citet{brukhim2022characterization}. A finite set \(F\subseteq\cY^d\) is a \(q\)-pseudo-cube if, for every \(f\in F\) and coordinate \(i\in[d]\), at least \(q\) other members agree with \(f\) outside \(i\) and have distinct values at \(i\). A class \(q\)-DS shatters \(x_{1:d}\) if its trace contains such an \(F\). The \(q\)-DS dimension is the largest shattered \(d\). The theorem of \citet{charikar2023characterization} states that \(\cH\) is \(q\)-list PAC learnable if and only if its \(q\)-DS dimension is finite. Notice the indexing: a \(q\)-pseudo-cube has coordinate lines of size at least \(q+1\).
+
+\section{The exact list spectrum}
+\label{sec:spectrum}
+
+\begin{theorem}[Finite-sample direct product and exact spectrum]
+\label{thm:spectrum}
+Let \(\cH_1,\ldots,\cH_r\) be nonempty classes with finite \(k_j=K(\cH_j)\), and set \(M=\prod_{j=1}^r k_j\). For every \(n\ge0\) and integer \(0\le L<M\),
+\begin{align}
+\Risk_L\!\left(n;\bigotimes_{j=1}^r\cH_j\right)
+&\ge (M-L)\prod_{j=1}^r
+\left(\frac1{k_j}-\Risk_{k_j}(n;\cH_j)\right)_+,
+\label{eq:finite-lower}\\
+\Risk_L\!\left(n;\bigotimes_{j=1}^r\cH_j\right)
+&\le 1-\frac{L}{M}
++\frac{L}{M}\sum_{j=1}^r\Risk_{k_j}(n;\cH_j).
+\label{eq:finite-upper}
+\end{align}
+For \(L\ge M\), the product risk is at most \(\sum_j\Risk_{k_j}(n;\cH_j)\). Consequently, for every fixed integer \(L\ge0\),
+\begin{equation}
+\label{eq:exact-spectrum}
+\lim_{n\to\infty}\Risk_L\!\left(n;\bigotimes_{j=1}^r\cH_j\right)
+=\left(1-\frac{L}{M}\right)_+.
+\end{equation}
+\end{theorem}
+
+The limit is a strong converse. Below \(M\), more samples cannot overcome an insufficient prediction budget. The asymptotic success probability is exactly the fraction \(L/M\) of the critical Cartesian list that the learner can retain. For example, the \(r\)-th power of any class with \(K(\cH)=2\) has critical list size \(2^r\), and every fixed \(L<2^r\) has limiting error \(1-L/2^r\). Classes with \(K=2\) and infinite ordinary DS dimension are constructed by \citet{charikar2023characterization}.
+
+\begin{corollary}[List number and weak accuracy]
+\label{cor:list-gamma}
+For nonempty classes,
+\[
+K\!\left(\bigotimes_{j=1}^r\cH_j\right)=\prod_{j=1}^rK(\cH_j),
+\]
+with the convention that a product containing infinity is infinite. If all list numbers are finite and \(\gamma(\cH)\) denotes the optimal weak PAC accuracy of \citet{brukhim2023boosting}, then
+\[
+\gamma\!\left(\bigotimes_{j=1}^r\cH_j\right)=\prod_{j=1}^r\gamma(\cH_j).
+\]
+\end{corollary}
+
+For two factors, Corollary~\ref{cor:list-gamma} replaces both sides of the previous interval by \(K(\cH_1)K(\cH_2)\). Factors with \(K=1\) are not exceptions. They leave the critical list size unchanged and contribute their ordinary learning error to the finite-sample bounds.
+
+\section{Proof of the spectrum theorem}
+\label{sec:proof}
+
+The proof has three ingredients. First, a pseudo-cube makes the boundary list size Bayes-hard. Second, adjacent Bayes list risks expose one posterior order statistic. Third, posterior order statistics multiply across independent experiments.
+
+\subsection{Boundary posteriors from pseudo-cubes}
+
+Fix a finite prior \(\Pi\) on pairs \((D,h)\) with \(h\in\cH\). After observing \(S\sim D_h^n\) and an unlabeled test point \(X\sim D\), let
+\[
+p_{(1)}(S,X)\ge p_{(2)}(S,X)\ge\cdots
+\]
+be the ordered posterior probabilities of \(h(X)\), padded by zeros. The Bayes \(q\)-list risk is
+\[
+\Bayes_q(\Pi)=1-\E\sum_{a=1}^q p_{(a)}(S,X).
+\]
+Hence adjacent list risks satisfy the exact identity
+\begin{equation}
+\label{eq:adjacent}
+\E p_{(q)}(S,X)=\Bayes_{q-1}(\Pi)-\Bayes_q(\Pi).
+\end{equation}
+
+\begin{lemma}[Boundary posterior]
+\label{lem:boundary}
+Let \(k=K(\cH)<\infty\). For every \(n\) and \(\eta>0\), there is a finite prior with
+\[
+\E p_{(k)}(S,X)\ge\frac{1-\eta}{k}-\Risk_k(n;\cH).
+\]
+For \(k=1\), one may replace \((1-\eta)/k\) by one.
+\end{lemma}
+
+\begin{proof}
+Assume \(k\ge2\). Minimality of \(k\) and the list-DS characterization imply that the \((k-1)\)-DS dimension of \(\cH\) is infinite. Choose a \((k-1)\)-pseudo-cube \(F\) on \(d\) coordinates, where \(d\) is large enough that \((1-1/d)^n\ge1-\eta\). Use the uniform prior on its distinct trace vectors, selecting one representative hypothesis per vector, and let \(D\) be uniform on the \(d\) coordinates.
+
+Condition on the test coordinate not appearing among the \(n\) training coordinates. Reveal to the learner every target label outside the test coordinate. This additional information can only reduce Bayes risk. The compatible vertices form one coordinate line of \(F\). The prior conditional on that line is uniform, and the pseudo-cube property gives at least \(k\) distinct labels on it. Even with the extra information, a \((k-1)\)-list therefore misses with probability at least \(1/k\). Thus
+\[
+\Bayes_{k-1}(\Pi)\ge\frac{(1-1/d)^n}{k}\ge\frac{1-\eta}{k}.
+\]
+For every prior, its Bayes \(k\)-list risk is at most the worst-case minimax risk \(\Risk_k(n;\cH)\). Equation~\eqref{eq:adjacent} proves the claim. If \(k=1\), use \(\Bayes_0=1\), \(\Bayes_1\le\Risk_1(n;\cH)\), and \(p_{(1)}=\Bayes_0-\Bayes_1\).
+\end{proof}
+
+Repeated training coordinates cause no difficulty in Lemma~\ref{lem:boundary}. The hard event is precisely that the test coordinate is absent. Revealing the entire complement subsumes all repeated observations and leaves a coordinate line with the required number of distinct labels.
+
+\subsection{A top-grid inequality}
+
+\begin{lemma}[Omitted posterior grid]
+\label{lem:grid}
+For each \(j\in[r]\), let \(p_j\) be a probability vector with ordered entries \(p_{j,(1)}\ge p_{j,(2)}\ge\cdots\). Set \(M=\prod_jk_j\). Every list of at most \(L<M\) atoms from the product distribution \(\bigotimes_jp_j\) has omitted mass at least
+\[
+(M-L)\prod_{j=1}^r p_{j,(k_j)}.
+\]
+\end{lemma}
+
+\begin{proof}
+The Cartesian product of the top \(k_j\) coordinates contains \(M\) atoms. A list of size \(L\) omits at least \(M-L\) of them. Every omitted atom in this grid has mass at least \(\prod_jp_{j,(k_j)}\). Summing their masses proves the claim.
+\end{proof}
+
+\subsection{Combining the factors}
+
+\begin{proof}[Proof of Theorem~\ref{thm:spectrum}]
+For each factor, take the finite prior from Lemma~\ref{lem:boundary}, with a common parameter \(\eta\). Draw the factor targets, training coordinates, and test coordinates independently. This defines a finite prior over realizable problems for the product class. Conditional on the full product sample and test tuple, the posterior law of the tuple label factorizes as \(\bigotimes_jp_j\).
+
+Lemma~\ref{lem:grid} lower bounds the conditional Bayes \(L\)-list error. The factor experiments are independent, so taking expectations gives
+\[
+\Bayes_L\ge(M-L)\prod_j\E p_{j,(k_j)}
+\ge(M-L)\prod_j\left(\frac{1-\eta}{k_j}-\Risk_{k_j}(n;\cH_j)\right)_+.
+\]
+The minimax risk is at least the Bayes risk under every finite prior. Letting \(\eta\downarrow0\) proves \eqref{eq:finite-lower}.
+
+For the upper bound, run independent near-minimax \(k_j\)-list learners on the coordinate projections of the product sample. Their Cartesian list has size \(m\le M\), and it omits the true tuple with probability at most \(\sum_j\Risk_{k_j}(n;\cH_j)\), up to an arbitrarily small optimization slack. If \(m>L\), choose a uniformly random \(L\)-subset. If \(m\le L\), keep the whole list. Conditional on the true tuple being present, it is retained with probability at least \(L/M\). Therefore the success probability is at least
+\[
+\frac{L}{M}\left(1-\sum_j\Risk_{k_j}(n;\cH_j)\right),
+\]
+which proves \eqref{eq:finite-upper}. For \(L\ge M\), retain the full Cartesian list. Finally, \(\Risk_{k_j}(n;\cH_j)\to0\) for every factor, so the finite-sample bounds converge to \eqref{eq:exact-spectrum}.
+\end{proof}
+
+If one factor has infinite list number and the product were \(L\)-list learnable, fix arbitrary targets and point-mass marginals in the other factors. Project every output tuple list onto the hard coordinate. The projected list has size at most \(L\), and its error is no larger than the tuple-list error. This would make the hard factor finitely list learnable, a contradiction. Corollary~\ref{cor:list-gamma} now follows from Theorem~\ref{thm:spectrum} and the identity \(K(\cH)\gamma(\cH)=1\) of \citet{brukhim2023boosting}.
+
+\section{Fixed-marginal tensorization}
+\label{sec:fixed}
+
+The same posterior factorization gives an exact finite-sample statement for ordinary classification, subject only to the usual distinction between minimax and least-favorable-prior values. Fix a known marginal \(D\) and let \(R(n;D,\cH)\) be the randomized minimax one-list risk, with the supremum only over \(h\in\cH\). Let
+\[
+\underline R(n;D,\cH)
+=\sup_{\Pi}\inf_A\E_{h\sim\Pi,S,X,A}\1\{A(S)(X)\ne h(X)\},
+\]
+where the supremum is over finitely supported priors on \(\cH\).
+
+\begin{theorem}[Fixed-marginal sandwich]
+\label{thm:fixed}
+For \(r\) classes and marginals,
+\begin{multline}
+1-\prod_{j=1}^r\left(1-\underline R(n;D_j,\cH_j)\right)
+\le R\!\left(n;\bigotimes_jD_j,\bigotimes_j\cH_j\right)\\
+\le1-\prod_{j=1}^r\left(1-R(n;D_j,\cH_j)\right).
+\label{eq:fixed-sandwich}
+\end{multline}
+Whenever finite-prior minimax equality holds in every factor, both inequalities are equalities. In particular, for every finite game,
+\[
+R(n;D^r,\cH^r)=1-\left(1-R(n;D,\cH)\right)^r.
+\]
+\end{theorem}
+
+For the upper bound, run independent factor learners. Their correctness events are independent for every fixed target tuple. For the lower bound, take independent nearly least-favorable priors. Conditional posterior correctness maxima multiply, so Bayes all-coordinate success is the product of the factor Bayes successes. Appendix~\ref{app:fixed} gives the full argument and states sufficient regularity conditions.
+
+In the small-risk regime, \(1-(1-R)^r=rR(1+O(rR))\). Thus a fixed marginal offers no asymptotic improvement over separate learning before the all-coordinate loss saturates. This gives a sharp answer to the fixed-marginal question of \citet{hanneke2024direct} for finite games and, more generally, whenever the standard minimax identity is valid.
+
+\section{What tensorizes in agnostic and uniform learning}
+\label{sec:rates}
+
+The list spectrum is universal because it is governed by a qualitative boundary. Agnostic excess-risk curves are not. \citet{more2026separation} exhibit binary classes \(\cF\) and \(\cG\) with \(\Risk^{\mathrm{agn}}(n;\cF)\asymp\Risk^{\mathrm{agn}}(n;\cG)\asymp n^{-1/2}\), but \(\cF^r\) retains rate \(n^{-1/2}\) while \(\cG^r\) has rate \(\min\{1,\sqrt{r/n}\}\). The one-factor curve and \(r\) therefore cannot determine the product curve.
+
+Combinatorial dimensions recover a positive law away from the exceptional one-dimensional regime. Let \(\DS(\cH)\) and \(\Nat(\cH)\) be the DS and Natarajan dimensions \citep{natarajan1989learning}. Combining the sharp realizable theorem of \citet{pabbaraju2026optimal}, the two-parameter agnostic theorem of \citet{cohen2025natarajan}, and the product-dimension bounds of \citet{hanneke2024direct} yields the following consequence. A proof is included in Appendix~\ref{app:dimensions}.
+
+\begin{corollary}[Agnostic products in the nondegenerate regime]
+\label{cor:agnostic}
+Let \(\cH\) have a finite label space, \(\DS(\cH)=d\ge2\), and \(\Nat(\cH)=q\ge3\). Up to logarithmic factors, the agnostic PAC sample complexity of \(\cH^r\) is
+\[
+\widetilde\Theta\left(
+\frac{rd}{\varepsilon}
++\frac{rq+\log(1/\delta)}{\varepsilon^2}
+\right).
+\]
+Equivalently, its expected excess-risk scale is
+\[
+\widetilde\Theta\left(\frac{rd}{n}+\sqrt{\frac{rq}{n}}\right),
+\]
+clipped at one.
+\end{corollary}
+
+The assumptions \(d\ge2\) and \(q\ge3\) are substantive. Product dimensions satisfy \(\DS(\cH^r)\ge r(d-1)+1\) and \(\Nat(\cH^r)\ge r(q-2)+2\). Neither lower bound grows with \(r\) at the smallest dimension, exactly where the separation of \citet{more2026separation} operates.
+
+There is a parallel distribution-free statement for empirical uniform convergence. If \(g=\Gdim(\cH)\ge2\), then
+\[
+r(g-1)\le\Gdim(\cH^r)\le C rg\log(2r).
+\]
+The lower bound uses one anchor in each graph-shattered factor. The upper bound observes that the product loss is the OR of \(r\) lifted factor losses and applies the growth-function product bound. Thus the worst-case expected uniform-deviation curve lies between constant multiples of
+\[
+\min\left\{1,\sqrt{\frac{r(g-1)}{n}}\right\}
+\quad\text{and}\quad
+\min\left\{1,\sqrt{\frac{rg\log(2r)}{n}}\right\}.
+\]
+This concerns the empirical process of a product concept class under arbitrary distributions. \citet{holzman2026uniform} study a different problem, namely arbitrary event families on product domains under distributions compatible with the product structure, and characterize when a nonempirical uniform estimator exists via linear VC dimension.
+
+\section{Related work and discussion}
+\label{sec:related}
+
+\paragraph{List learnability.}
+\citet{charikar2023characterization} introduce the list-DS dimensions and prove that finite \(k\)-DS dimension characterizes \(k\)-list PAC learnability. \citet{brukhim2023boosting} give a boosting-based proof and identify optimal weak accuracy with reciprocal minimal list size. \citet{hanneke2026sauer} prove the sharp Sauer inequality for list-DS dimension. \citet{pabbaraju2026optimal} establishes the optimal DS dependence of realizable multiclass and list sample complexity. Our result uses the qualitative characterization at the single boundary \(k-1\) versus \(k\), then derives a product theorem that is not a dimension inequality.
+
+\paragraph{Direct sums.}
+The product operation and open questions are due to \citet{hanneke2024direct}, whose longer list-compression work develops the pseudo-cube product bounds behind the previous interval for \(K\) \citep{hanneke2024compression}. \citet{nachum2018information} prove a direct sum for the information complexity of proper consistent binary learning. \citet{suruga2025direct} proves direct-sum theorems for oracle and query complexity. These resources, losses, and protocols differ from the list-risk spectrum studied here.
+
+\paragraph{Limitations.}
+The exact spectrum is information-theoretic and may use improper, randomized, computationally inefficient learners. Randomization is needed for the concise upper spectrum below the critical list size, though the threshold identity for \(K\) does not depend on it. The fixed-marginal equality is stated with its minimax regularity condition rather than assuming that every infinite measurable game has a least-favorable finite prior. The agnostic and uniform corollaries retain logarithmic gaps and nondegeneracy conditions.
+
+\section{Conclusion}
+
+The least PAC list size tensorizes exactly under Cartesian products, and the threshold is only one point on a complete linear risk spectrum. The proof isolates a reusable mechanism: adjacent Bayes list risks reveal a posterior order statistic, and a product of those order statistics controls every omitted cell in a top-posterior grid. This also turns weak multiclass accuracy into an exactly multiplicative resource. Fixed-marginal ordinary risk obeys a different all-coordinate tensorization, while unrestricted agnostic curves require more structural information than their one-factor rates. Together, these results resolve the sharpest qualitative direct-sum question and delineate which learning resources multiply, add, or admit no curve-only law.
+
+\subsection*{Reproducibility statement}
+
+All assumptions and minimax quantities are defined in Section~\ref{sec:setting}. Section~\ref{sec:proof} proves the main theorem. The appendices prove the regularity, fixed-marginal, and dimension claims. Appendix~\ref{app:verification} describes finite checks of the two algebraic inequalities used in the paper.
+
+\bibliography{references}
+\bibliographystyle{iclr2027_conference}
+
+\appendix
+
+\section{Expected risk and PAC learnability}
+\label{app:pac}
+
+We record the equivalence used to define \(K\). Suppose a fixed \(k\)-list learner has the PAC property. For any \(a>0\), request population error at most \(a\) with failure probability at most \(a\). Since loss is bounded by one, its expected population error is at most \(2a\) for all sufficiently large samples. Taking the infimum over learners gives \(\Risk_k(n;\cH)\to0\).
+
+Conversely, choose a learner with worst-case expected error at most \(2\Risk_k(n;\cH)\). Markov's inequality gives
+\[
+\sup_{D,h}\Pp\{\operatorname{err}_{D_h}(A(S))>\varepsilon\}
+\le\frac{2\Risk_k(n;\cH)}{\varepsilon}.
+\]
+For any \(\varepsilon,\delta>0\), the right side is at most \(\delta\) for all sufficiently large \(n\). Optimization slack can be sent to zero. Thus vanishing minimax expectation and list PAC learnability are equivalent.
+
+If one factor has \(K=\infty\), suppose its product with nonempty classes were \(L\)-list learnable. Fix one target and a point-mass marginal in every other coordinate. Simulate the product learner using the hard factor sample, append the fixed coordinates, and project every predicted tuple onto the hard coordinate. Projection produces at most \(L\) labels. Whenever the projected list misses the hard target, the original tuple list also misses. This contradicts \(K=\infty\).
+
+\section{Proof of fixed-marginal tensorization}
+\label{app:fixed}
+
+For factor \(j\), let an algorithm have worst-target error at most \(R_j+\eta\). Run the algorithms with independent random seeds on the coordinate projections of the product sample. For a fixed target tuple, the factor samples, test coordinates, and seeds are independent. The probability that every coordinate is correct is therefore the product of the factor correctness probabilities and is at least \(\prod_j(1-R_j-\eta)\). Letting \(\eta\downarrow0\) proves the upper bound in \eqref{eq:fixed-sandwich}.
+
+For the lower bound, fix finitely supported priors \(\Pi_j\) on the targets. After observing \((S_j,X_j)\), let \(m_j(S_j,X_j)\) be the largest posterior probability of a factor label. Under the product prior and product marginal, the posterior of the tuple label factorizes. Its largest atom has mass \(\prod_jm_j\). Hence the product Bayes error is
+\[
+1-\E\prod_jm_j
+=1-\prod_j\E m_j
+=1-\prod_j(1-\Bayes_1(\Pi_j)).
+\]
+The minimax product risk is at least every Bayes risk. Taking each prior arbitrarily close to its finite-prior Bayes envelope gives the lower bound in \eqref{eq:fixed-sandwich}.
+
+If \(\underline R(n;D_j,\cH_j)=R(n;D_j,\cH_j)\) for every factor, the bounds coincide. This equality follows directly from finite zero-sum minimax when the induced statistical game is finite. It also holds under the standard compactness and lower-semicontinuity hypotheses of statistical decision theory. The sandwich remains valid without any such regularity.
+
+\section{Product dimensions and learning rates}
+\label{app:dimensions}
+
+\subsection{Graph dimension}
+
+The graph dimension of \(\cH\) is the VC dimension of its correctness class \(\{(x,y)\mapsto\1\{h(x)=y\}:h\in\cH\}\). For the product class, correctness is the AND of the lifted factor correctness indicators, or equivalently product loss is the OR of factor losses. On any \(m\) product examples, the number of product loss patterns is at most the product of the factor growth functions. If the positive graph dimensions are \(g_j\) and \(G=\sum_jg_j\), Sauer's lemma gives
+\[
+\Pi_{\otimes_j\cH_j}(m)
+\le\prod_j\left(\frac{em}{g_j}\right)^{g_j}.
+\]
+The standard VC union calculation \citep{vandervaart2009vc} implies \(\Gdim(\bigotimes_j\cH_j)\le C G\log(2r)\).
+
+For the lower bound, take a graph-shattered set of size \(g_j\) in each factor with \(g_j\ge1\), and reserve one point as its anchor. For every nonanchor point of factor \(j\), create a product point using that point in coordinate \(j\) and anchors in all other coordinates. To realize any binary pattern on the resulting \(\sum_j(g_j-1)_+\) points, ask each factor hypothesis to match its witness on the anchor and on exactly the selected nonanchors. All other coordinates match their anchors, so product correctness on a point is controlled by its unique nonanchor coordinate. Therefore
+\[
+\sum_j(g_j-1)_+
+\le\Gdim\!\left(\bigotimes_j\cH_j\right)
+\le C\left(\sum_jg_j\right)\log(2r).
+\]
+Classical VC lower and upper bounds for expected uniform deviation give the rates stated in Section~\ref{sec:rates}.
+
+\subsection{DS, Natarajan, and realizable dimensions}
+
+Let \(d_j=\DS(\cH_j)\) and \(q_j=\Nat(\cH_j)\). The constructions of \citet{hanneke2024direct} iterate to
+\begin{align}
+\DS\!\left(\bigotimes_j\cH_j\right)&\ge\sum_jd_j-(r-1),
+\label{eq:ds-product}\\
+\sum_jq_j-2(r-1)
+\le\Nat\!\left(\bigotimes_j\cH_j\right)&\le\sum_jq_j.
+\label{eq:nat-product}
+\end{align}
+
+The realizable dimension \(d_{\mathrm{RE}}(\cH)\) of \citet{cohen2025natarajan} is the minimax sample size needed for a fixed constant expected error. \citet{pabbaraju2026optimal} prove the realizable tail bound corresponding to sample complexity \(O((\DS+\log(1/\delta))/\varepsilon)\). Integrating this tail gives a factor learner with expected error \(O(d_j/n)\). Running these learners on the coordinate projections gives product expected error \(O((\sum_jd_j)/n)\). Hence
+\[
+d_{\mathrm{RE}}\!\left(\bigotimes_j\cH_j\right)
+\le C\sum_jd_j.
+\]
+Conversely, realizable dimension is at least a constant multiple of DS dimension. Equation~\eqref{eq:ds-product} supplies the matching lower bound whenever \(\sum_jd_j-(r-1)\) is a constant fraction of \(\sum_jd_j\).
+
+The main theorem of \citet{cohen2025natarajan}, sharpened using \citet{pabbaraju2026optimal}, states
+\[
+M_{\mathrm{agn}}(\varepsilon,\delta;\cG)
+=\widetilde\Theta\left(
+\frac{d_{\mathrm{RE}}(\cG)}{\varepsilon}
++\frac{\Nat(\cG)+\log(1/\delta)}{\varepsilon^2}
+\right).
+\]
+Apply this to \(\cG=\cH^r\). If \(d=\DS(\cH)\ge2\), then \eqref{eq:ds-product} is \(\Theta(rd)\). If \(q=\Nat(\cH)\ge3\), then \eqref{eq:nat-product} is \(\Theta(rq)\). This proves Corollary~\ref{cor:agnostic}. Standard inversion of the two sample-complexity terms gives the expected excess-risk display, up to logarithms and clipping at one.
+
+\section{Finite verification checks}
+\label{app:verification}
+
+The proof of Theorem~\ref{thm:spectrum} is analytic. We nevertheless checked its posterior inequality on 20,000 independent triples of random finite probability vectors. For each trial, the script selected three list ranks and checked zero budget, the threshold-minus-one budget, and one random intermediate budget. After duplicate budgets were removed, 54,276 inequalities of the form
+\[
+1-\sum_{a=1}^Lq_{(a)}
+\ge(M-L)\prod_jp_{j,(k_j)}
+\]
+were tested, where \(q\) is the flattened product posterior. The minimum slack was \(-5.3\times10^{-16}\), within floating-point roundoff.
+
+We also solved eight exact randomized minimax linear programs for all binary concepts on a two-point domain. The cases use \(n\in\{0,1\}\), product powers \(r\in\{2,3\}\), and marginals \((1/2,1/2)\) and \((0.7,0.3)\). Every instance matched the fixed-marginal prediction \(1-(1-R)^r\), with maximum absolute discrepancy \(3.4\times10^{-16}\).
+
+\end{document}
